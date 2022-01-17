@@ -6,20 +6,26 @@ Vue.use(Router)
 const router = new Router({
     mode: 'history',
     routes: [
-        // {
-        //     path: '/',
-        //     component: function () {
-        //         return '@/components/layout'
-        //     },
-        //     children: [
-        //         {
-        //             path: '/login',
-        //             component: function () {
-        //                 return '@/views/auth/login'
-        //             }
-        //         },
-        //     ]
-        // }
+        {
+            path: '',
+            component: function (){
+                return import('@/components/layout')
+            },
+            children: [
+                {
+                    path: '/',
+                    component: function (){
+                        return import('@/views/auth/login')
+                    },
+                },
+                {
+                    path: '/refresh',
+                    component: function (){
+                        return import('@/views/auth/refresh')
+                    },
+                },
+            ]
+        },
     ]
 })
 

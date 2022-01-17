@@ -1,111 +1,237 @@
 <template>
-  <div class="login_page">
-    <div class="login_box">
-      <div class="center_box">
-        <!-- 登录&注册-->
-        <div :class="{login_form: true, rotate: tab == 2}">
-          <div :class="{tabs: true, r180: reverse == 2}">
-            <div class="fl tab" @click="changetab(1)">
-              <span :class="{on: tab == 1}">登录</span>
-            </div>
-            <div class="fl tab" @click="changetab(2)">
-              <span :class="{on: tab == 2}">注册</span>
-            </div>
-          </div>
-          
-          <!-- 登录 -->
-          <div class="form_body" v-if="reverse == 1">
-            <!-- submit.prevent 阻止默认表单事件提交，采用loginSubmit -->
-            <form @submit.prevent="loginSubmit">
-              <input type="text" v-model="loginData.username" placeholder="请输入用户名" autocomplete="off">
-              <input type="password" v-model="loginData.password" placeholder="请输入密码" autocomplete="off">
-              <div class="error_msg">{{loginMessage}}</div>
-              <input type="submit" v-if="subState" disabled="disabled" value="登录中···" class="btn" />
-              <input type="submit" v-else value="登录" @submit="loginSubmit" class="btn" />
-            </form>
-          </div>
-
-          <!-- 注册 -->
-          <div class="form_body r180" v-if="reverse == 2">
-            <form @submit.prevent="regSubmit">
-              <input type="text" v-model="registerData.username" placeholder="请输入用户名" autocomplete="off">
-              <input type="password" v-model="registerData.password" placeholder="6-30位密码，可用数字/字母/符号组合" autocomplete="off">
-              <input type="password" v-model="registerData.repPassword" placeholder="确认密码" >
-              <div class="error_msg">{{regMessage}}</div>
-              <div class="agree">
-                <input type="checkbox" id="tonyi" v-model="registerData.check">
-                <label for="tonyi">我已经阅读并同意</label><a href="jvascript:;"  @click="protocol = true">《用户协议》</a>
-              </div>
-              <input type="submit" v-if="subState" disabled="disabled" value="提交中···" class="btn">
-              <input type="submit" v-else value="注册" class="btn">
-            </form>
-          </div>
+    <div class="content login">
+        <div class="error_msg" style="font-size: 11px; color: red;"><p> {{loginMessage}} </p></div>
+        <br/>
+        <div class="switch">
+            <span :class='{"active": active === "login"}' @click='go("login")'>Login</span>
+            <span>/</span>
+            <span :class='{"active": active === "register"}' @click='go("register")'>Signup</span>
         </div>
-      </div>
-    </div>
+        <div class='form' id="fromLogin">
+            <transition name="plus-icon">
+                <template v-if='active === "register"'>
+                    <form @submit.prevent="regSubmit">
+                        <div class="input">
+                            <input type="text" v-model="registerData.username" id="r_username" @blur="check('r_username')" autocomplete="off"/>
+                            <label class="no_content" for="r_username">Username</label>
+                        </div>
+                        <div class="input">
+                            <input type="password" v-model="registerData.password" id="r_password" @blur="check('r_password')"/>
+                            <label class="no_content" for="r_password">Password</label>
+                        </div>
+                        <div class="input">
+                            <input type="text" v-model="registerData.rePassword" id='email' @blur="check('email')"/>
+                            <label class="no_content" for="email">Re-enter Password</label>
+                        </div>
+                        <div class="agree">
+                            <input type="checkbox" id="tonyi" v-model="registerData.check">
+                            <label for="tonyi">I have read and consent </label><a href="jvascript:;"  @click="protocol = true"><i>user protocol</i></a>
+                        </div>
+                        <button type="submit" v-if="subState" disabled="disabled">Submitting...</button>
+                        <button type="submit" v-else>Signup!</button>
+                    </form>
+                </template>
+            </transition>
 
-    <!-- 用户协议 -->
-    <div class="protocol" v-if="protocol" @click.self="protocol = false">
-      <div class="protocol_content">
-        <div class="protocol_title">请认真阅读用户协议</div>
-        <div class="protocol_body" v-if="protocolContent" v-html="protocolContent">
+            <transition name="plus-icon">
+                <template v-if='active === "login"'>
+                    <form @submit.prevent="loginSubmit">
+                        <div class="input">
+                            <input type="text" v-model="loginData.username" id="username" @blur="check('username')" autocomplete="off"/>
+                            <label class="no_content" for="username">Username</label>
+                        </div>
+
+                        <div class="input">
+                            <input type="password" v-model="loginData.password" name="password" id="Password" @blur="check('Password')" autocomplete="off"/>
+                            <label class="no_content" for="Password">Password</label>
+                        </div>
+                        <button type="submit" v-if="subState" disabled="disabled">Login...</button>
+                        <button type="submit" v-else @submit="loginSubmit">Login!</button>
+                    </form>
+                </template>
+            </transition>
         </div>
-        <input type="button" class="protocol_btn" value="确定" @click="protocol = false">
-      </div>
+
+        <div class="protocol" v-if="protocol" @click.self="protocol = false">
+            <div class="protocol_content">
+                <div class="protocol_title">Please read following user protocol</div>
+                <div class="protocol_body" v-if="protocolContent" v-html="protocolContent">
+                </div>
+                <input type="button" class="protocol_btn" value="Exit" @click="protocol = false">
+            </div>
+        </div>
     </div>
-  </div>
 </template>
-<script >
+<script>
+import {isvalidUsername} from '@/utils/validate'
+import {getProtocol, getUserByUsername, register} from '@/api/auth'
+
 export default {
-
-    data () {
-      return {
-        tab:  1, // 高亮当前标签名
-        reverse:  1, // 旋转 1 登录，2 注册
-        loginMessage: '', //登录错误提示信息
-        regMessage: '', //注册错误提示信息
-        subState: false, //提交状态
-        protocol: false, // 显示隐藏协议内容
-        protocolContent: null, // 协议内容
-        redirectURL: '//www.mengxuegu.com', // 登录成功后重写向地址
-        loginData: { // 登录表单数据
-            username: '',
-            password: ''
-        },
-        registerData: { // 注册表单数据
-            username: '',
-            password: '',
-            repassword: '',
-            check: false
-        },
-      }
+    name: 'login',
+    // el: '#app',
+    data() {
+        return {
+            active: 'login',
+            tab:  1, // 高亮当前标签名
+            reverse:  1, // 旋转 1 登录，2 注册
+            loginMessage: ' ', //登录错误提示信息
+            regMessage: '', //注册错误提示信息
+            subState: false, //提交状态
+            protocol: false, // 显示隐藏协议内容
+            protocolContent: null, // 协议内容
+            redirectURL: '//www.garrick.cn', // 登录成功后重写向地址
+            loginData: { // 登录表单数据
+                username: '',
+                password: ''
+            },
+            registerData: { // 注册表单数据
+                username: '',
+                password: '',
+                rePassword: '',
+                check: false
+            },
+        }
     },
-
     methods: {
+        check(id) {
+            const input = document.getElementById(id).value;
+            const label = document.getElementById(id).nextElementSibling;
+            if (input === "") {
+                label.className = "no_content";
+            } else {
+                label.className = "input_content";
+            }
+        },
+        go (type) {
+            this.active = type
+        },
+        // 提交登录
+        loginSubmit() {
+            if (this.subState) {
+                return false
+            }
+            if (!isvalidUsername(this.loginData.username)) {
+                this.loginMessage = 'Username or Password Incorrect'
+                return false
+            }
+            if (this.loginData.password.length < 6) {
+                this.loginMessage = 'Username or Password Incorrect'
+                return false
+            }
+            this.subState = true
+            this.$store.dispatch('UserLogin', this.loginData).then(response => {
+                const {code, message} = response
+                if (code === 200) {
+                    window.location.href = this.redirectURL
+                } else {
+                    this.loginMessage = message
+                    this.subState = false
+                }
+            }).catch(error => {
+                this.loginMessage = error
+                this.subState = false
+            })
+        },
 
-      // 切换标签
-      changetab (int) {
-          this.tab = int;
-          let _that = this;
-          setTimeout(() => {
-            this.reverse = int
-          }, 200)
-      },
+        // 提交注册
+        async regSubmit() {
+            if (this.subState) {
+                return false
+            }
 
-      // 提交登录
-      loginSubmit() {
+            if (!isvalidUsername(this.registerData.username)) {
+                this.loginMessage = 'Please input correct username format'
+                return false
+            }
 
-      },
+            if (this.registerData.password.length < 6 || this.registerData.password.length > 30) {
+                this.loginMessage = 'Password Length should between 6 and 30'
+                return false
+            }
 
-      // 提交注册
-      regSubmit() {
-        
-      }
+            if (!this.registerData.check) {
+                this.loginMessage = 'Please read and consent user protocol'
+                return false
+            }
+            if (this.registerData.password !== this.registerData.rePassword) {
+                this.loginMessage = "The passwords entered twice do not match"
+                return false
+            }
 
+            this.subState = true
+            const {code, message, data} = await getUserByUsername(this.registerData.username)
+            if (data) {
+                this.loginMessage = 'Username has been registered'
+                this.subState = false
+                return false
+            }
+            if (code !== 200) {
+                this.loginMessage = message
+                this.subState = false
+                return false
+            }
+            register(this.registerData).then(response => {
+                this.subState = false
+                const {code, message} = response
+                if (code === 200) {
+                    this.loginMessage = 'Register Successfully, Please Login'
+                    this.go('login')
+                } else {
+                    this.loginMessage = message
+                }
+            }).catch(error => {
+                this.loginMessage = error
+            })
+            this.subState = false
+        },
     },
+    async created() {
+        // Acquire the protocol
+        // this.protocolContent = getProtocol().then(response => {
+        getProtocol().then(response => {
+            this.protocolContent = response
+        }).catch(error=>{
+            console.log(error)
+        })
+        console.log(this.$route.query)
+        if (this.$route.query.redirectURL) {
+            this.redirectURL = this.$route.query.redirectURL
+        }
+    },
+    components:[
+
+    ]
 }
 </script>
-<style scoped>
-/*@import '../../assets/style/login.css'; */
-</style>
+<style>
+@import "../../assets/style/login_style_3.css";
+.agree {
+    font-size: 11px;
+    margin-top: -1rem;
+    margin-bottom: 1rem;
+    color: gray;
+}
 
+.plus-icon-enter-active{
+    transition: opacity 1.5s 0.1s;
+}
+.plus-icon-enter{
+    visibility: hidden;
+    opacity: 0;
+}
+.plus-icon-enter-to{
+    visibility: visible;
+    opacity: 1;
+}
+.plus-icon-leave{
+    opacity: 0;
+}
+.plus-icon-leave-active{
+    transition: opacity 0s;
+}
+.plus-icon-leave-to{
+    /*visibility: hidden;*/
+    opacity: 0;
+}
+
+</style>

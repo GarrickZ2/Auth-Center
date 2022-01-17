@@ -1,4 +1,4 @@
-import {login, logout} from '@/api/auth'
+import {login, logout, refreshToken} from '@/api/auth'
 import {Key, PcCookie} from '@/utils/cookie'
 
 const state = {
@@ -56,8 +56,31 @@ const actions = {
             commit('RESET_USER_STATE')
             window.location.href = redirectURL || '/'
         })
+    },
 
-    }
+    SendRefreshToken({state, commit}) {
+        return new Promise((resolve, reject) => {
+            if(!state.refreshToken) {
+                commit('RESET_USER_STATE')
+                reject('No refresh token')
+                return
+            }
+            refreshToken(state.refreshToken).then(response => {
+                const {code, message, data} = response
+                console.log('RefreshToken', response)
+                if (code === 200) {
+                    commit('SET_USER_STATE', data)
+                } else {
+                    commit('RESET_USER_STATE')
+                    reject(message)
+                }
+                resolve(response)
+            }).catch(error => {
+                commit('RESET_USER_STATE')
+                reject(error)
+            })
+        })
+    },
 }
 export default {
     state,
