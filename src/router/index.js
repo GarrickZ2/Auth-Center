@@ -24,6 +24,12 @@ const router = new Router({
                         return import('@/views/auth/refresh')
                     },
                 },
+                {
+                    path: '/logout',
+                    component: function (){
+                        return import('@/views/auth/logout')
+                    },
+                },
             ]
         },
     ]

@@ -14,7 +14,7 @@ const mutations = {
         state.accessToken = access_token
         state.refreshToken = refresh_token
 
-        PcCookie.set(Key.userInfoKey, userInfo)
+        PcCookie.set(Key.userInfoKey, JSON.stringify(userInfo))
         PcCookie.set(Key.accessTokenKey, access_token)
         PcCookie.set(Key.refreshTokenKey, refresh_token)
     },

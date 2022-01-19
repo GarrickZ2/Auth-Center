@@ -2,7 +2,7 @@
     <div>
         <div class="content">
             <span v-html="message"></span>
-            <div class="spinner">
+            <div class="spinner" id="load">
                 <div class="rect1"></div> &nbsp;
                 <div class="rect2"></div> &nbsp;
                 <div class="rect3"></div> &nbsp;
@@ -35,6 +35,8 @@ export default {
                     window.location.href = this.redirectURL
                 }
             ).catch(() => {
+                const load = document.getElementById('load')
+                load.hidden = true
                 this.message = `Your identity has been expired, please click
                 <a href="/?redirectURL=${this.redirectURL}"> login </a>`
             })

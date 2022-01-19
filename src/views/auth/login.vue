@@ -20,7 +20,7 @@
                             <label class="no_content" for="r_password">Password</label>
                         </div>
                         <div class="input">
-                            <input type="text" v-model="registerData.rePassword" id='email' @blur="check('email')"/>
+                            <input type="password" v-model="registerData.rePassword" id='email' @blur="check('email')"/>
                             <label class="no_content" for="email">Re-enter Password</label>
                         </div>
                         <div class="agree">
@@ -193,9 +193,11 @@ export default {
         }).catch(error=>{
             console.log(error)
         })
-        console.log(this.$route.query)
         if (this.$route.query.redirectURL) {
             this.redirectURL = this.$route.query.redirectURL
+        }
+        if (this.$route.query.dest) {
+            this.go(this.$route.query.dest)
         }
     },
     components:[
