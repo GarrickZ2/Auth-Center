@@ -1,6 +1,6 @@
 module.exports = {
     devServer: {
-        port: 7000, // 端口号，如果端口号被占用，会自动提升1
+        port: 7001,
         host: "localhost", //主机名
         https: false, //协议
         open: true, //启动服务时自动打开浏览器访问
